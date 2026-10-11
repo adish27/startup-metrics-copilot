@@ -287,6 +287,21 @@ def burn_multiple(data: Data, month: str, breakdown: str | None = None) -> Metri
     return MetricResult(net_burn(data, month).value / net_new_arr if net_new_arr > 0 else None, "x")
 
 
+def trials_started(data: Data, month: str, breakdown: str | None = None) -> MetricResult:
+    trials = data.accounts[data.accounts.trial_month == month]
+    bd = None
+    if breakdown == "channel":
+        bd = trials.groupby("acquisition_channel").size().rename("value").reset_index()
+        bd = bd.rename(columns={"acquisition_channel": "channel"})
+    return MetricResult(float(len(trials)), "trials", bd)
+
+
+def marketing_spend(data: Data, month: str, breakdown: str | None = None) -> MetricResult:
+    spend = _spend(data, month)
+    bd = spend.groupby("channel").spend.sum().rename("value").reset_index() if breakdown == "channel" else None
+    return MetricResult(float(spend.spend.sum()), "$", bd)
+
+
 def cohort_retention(data: Data) -> pd.DataFrame:
     """Rows = first paying month (in window), columns = months since, values = % of logos still paying."""
     paying = data.mrr_wide > 0
@@ -341,6 +356,10 @@ METRICS = {
                  breakdowns=["plan", "segment"], formula="MRR / paying accounts"),
     "burn_multiple": dict(fn=burn_multiple, label="Burn multiple", category="Cash", unit="x", core=False,
                           good="down", breakdowns=[], formula="Net burn / net new ARR"),
+    "trials_started": dict(fn=trials_started, label="Trials started", category="Acquisition", unit="trials",
+                           core=False, good="up", breakdowns=["channel"], formula="Trials started in month m"),
+    "marketing_spend": dict(fn=marketing_spend, label="Marketing spend", category="Acquisition", unit="$",
+                            core=False, good="down", breakdowns=["channel"], formula="Marketing spend in month m"),
 }
 
 
