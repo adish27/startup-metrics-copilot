@@ -18,3 +18,9 @@
 - `tests/test_stories.py`: 9 checks from the spec. Mortgage-version dollar figure: the whale contracts by $13,000 in May.
 - Result: 9/9 pass.
 - Mutation check: switching each story off makes its own tests fail. Switching Story 1 or 3 off also breaks some Story 2 checks, because it shifts the random stream and the Story 2 checks are noise-sensitive (see Step 1). With seed 42 and all stories on, the data is deterministic.
+
+## Step 3: Metrics engine
+- `metrics.py`: `load_data`/`build_data`, the `account_changes` building block (per-account m-1 vs m label), 10 core metric functions plus supporting ones (ARR, ARPA, net burn, cash, burn multiple, cohort heatmap), a `METRICS` registry (label, category, unit, formula, good direction, breakdowns), a `series()` helper, and formatters. Percent metrics use a 0–100 scale.
+- Decisions: churn by plan is attributed to the plan the account left from. Runway averages the burn months available (1–2 in Oct/Nov). `filter_segment` filters accounts only, so spend, expenses and cash stay company-wide.
+- What broke: 3 fixture tests failed. Two were my hand arithmetic (Nov expenses are $3,250, not $3,350). One was pandas turning None into NaN in breakdown tables. The code was right in all three cases; I fixed the expected values. Note for Step 5: tool JSON output must convert NaN to null.
+- Result: 36 passed, 3 skipped (the no-peek checks for files not built yet). `metrics.py` agrees with the independent pandas code in conftest on every month's bridge, CAC and logo churn.
