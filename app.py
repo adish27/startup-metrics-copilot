@@ -306,6 +306,11 @@ def agent_ready() -> bool:
     return False
 
 
+def money_safe(text: str) -> str:
+    """Escape $ so Streamlit doesn't render "$3,233 ... $4,025" as LaTeX math."""
+    return text.replace("$", "\\$")
+
+
 def render_trace(trace: list[dict]):
     with st.expander(f"Agent trace ({len(trace)} tool calls)"):
         if not trace:
@@ -352,7 +357,7 @@ with tabs[5]:
             st.rerun()
         for msg in st.session_state.chat:
             with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+                st.markdown(money_safe(msg["content"]))
                 if msg["role"] == "assistant":
                     render_trace(msg["trace"])
     if question := st.chat_input("Ask about the metrics", disabled=not os.environ.get("ANTHROPIC_API_KEY")):
@@ -376,5 +381,5 @@ with tabs[6]:
         text, trace = st.session_state.update
         st.download_button("Download .md", text, file_name="closepath_investor_update_2026-09.md",
                            mime="text/markdown")
-        st.markdown(text)
+        st.markdown(money_safe(text))
         render_trace(trace)

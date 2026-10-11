@@ -49,5 +49,8 @@
 - Investor update: a fixed prompt (anomalies → investigate the top 3–5 → 10-metric table → TL;DR / Key metrics / Wins / Concerns / Recommended actions / Asks `[Founder to fill]`), rendered markdown, `.md` download, and a trace.
 - Without `ANTHROPIC_API_KEY` both tabs show a setup message and the dashboard still works.
 
-## Manual agent check: PENDING
-- Not run yet: there was no API key in the build environment. To do: add a key, ask "Why did MRR drop in August?", "What's driving CAC since June?" and "What changed most in the last 6 months?", then generate the investor update. Pass if each answer names the cause in `answer_key.md` and every number appears in the trace. Record the result here.
+## Manual agent check (live run, 2026-10-11)
+- Question: "What's driving CAC since June?" (one live question; the others were not run live).
+- Verdict: **pass.** It isolated the increase to paid social: spend about 2.8x ($46,419 in May to $129,497 in Jun 2026), trials +52.9%, trial-to-paid down to 2–9%, new paid-social customers down from 33 (Jan–May) to 20 (Jun–Sep), so CAC went from $6,962 to $25,610. Other channels moved −15.4% to +13.4%. Blended CAC went from $3,233 to $4,025 (+24.5%). It recommended pulling paid social back to about $46k a month and framed the audience-quality cause as a hypothesis.
+- Number check: every figure was recomputed from the tools afterwards and matched (referral +13.4% vs 13.5% is rounding). Missed vs the answer key: it didn't mention that paid-social customers also churn faster, which is reasonable for a CAC question.
+- Bug found: dollar amounts rendered as garbled math. Streamlit's `st.markdown` treats text between two `$` signs as LaTeX, so "$3,233 … $4,025" became a formula. Fix: `money_safe()` escapes `$` before rendering chat answers and the investor update (the `.md` download keeps the raw text). Verified with a before/after render.
