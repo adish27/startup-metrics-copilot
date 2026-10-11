@@ -337,14 +337,19 @@ with tabs[5]:
     st.caption("The agent answers only from read-only metric tools over the full dataset (sidebar filters do not "
                "apply). Every number should appear in the trace.")
     if agent_ready():
-        cols = st.columns(len(STARTER_QUESTIONS) + 1)
-        for col, q in zip(cols, STARTER_QUESTIONS):
-            if col.button(q, width="stretch"):
-                ask(q)
-        if cols[-1].button("New chat", width="stretch"):
+        def pick_starter():
+            # pills keep a selection; act on it once, then clear so the same question can be asked again
+            st.session_state.pending_question = st.session_state.starter
+            st.session_state.starter = None
+
+        st.pills("Try a question", STARTER_QUESTIONS, key="starter", on_change=pick_starter)
+        if question := st.session_state.pop("pending_question", None):
+            ask(question)
+        if st.session_state.chat and st.button("New chat", icon=":material/refresh:"):
             import agent
 
             st.session_state.chat, st.session_state.thread_id = [], agent.new_thread_id()
+            st.rerun()
         for msg in st.session_state.chat:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
